@@ -38,7 +38,8 @@ export const ActionTypes = { // 初始化state时使用，应当避免在自己�
  */
 export default function createStore(reducer, preloadedState, enhancer) {
   // 只传入两个参数，且第二个参数是一个函数时。
-  // 相当于重载，这里允许只传两个参数，保证第一个是reducer，第二个是enhancer即可。preloadedState在这里会被置为undefined。
+  // 相当于重载，这里允许只传两个参数，保证第一个是reducer，第二个是enhancer即可。
+  // preloadedState在这里会被置为undefined。
   if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
     enhancer = preloadedState
     preloadedState = undefined
@@ -48,11 +49,15 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (typeof enhancer !== 'function') {
       throw new Error('Expected the enhancer to be a function.')
     }
-    // enhancer(createStore) 调用的返回值为函数  (reducer,preloadedState,enhancer):Store => ... 可以看做加强后的createStore
-    // 该函数内部调用原始createStore，生成raw Store，接着对raw Store的dispatch函数应用中间件进行加强。
+    // enhancer(createStore) 调用的返回值为函数  
+    // (reducer,preloadedState,enhancer):Store => ... 可以看做加强后的createStore
+    // 该函数内部调用原始createStore，生成raw Store，接着对raw Store的dispatch函数应用
+    // 中间件进行加强。
     // 举例 enhancer 可以是 applyMiddleware(...middlewares)
-    // 所以，创建store 的方法 可以是 let store =  createStore(reducer,applyMiddleware(...middlewares))
-    // 也可以是 let store = applyMiddleware(...middlewares)(createStore)(reducer),我觉得这行代码更直观些
+    // 所以，创建store 的方法 可以是 
+    // let store =  createStore(reducer,applyMiddleware(...middlewares))
+    // 也可以是 
+    // let store = applyMiddleware(...middlewares)(createStore)(reducer),我觉得这行代码更直观些
     // 或者这样：let strongerCreateStore = applyMiddleware(...middlewares)(createStore);
     //          let store = strongerCreateStore(reducer)
     return enhancer(createStore)(reducer, preloadedState)
@@ -95,7 +100,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * caveats:
    * 
    * 在回调函数里，你也可以派发(dispatch) action，但是需要注意这些：
-   *  （订阅的加入和取消 与 你派发动作之间的顺序会产生些比较绕的问题，主要是你必须要知道你的监听器会响应哪些dispatch操作）
+   *  （订阅的加入和取消 与 你派发动作之间的顺序会产生些比较绕的问题，主要是你必须要
+   *  知道你的监听器会响应哪些dispatch操作）
    * 
    * 1. The subscriptions are snapshotted just before every `dispatch()` call.
    * If you subscribe or unsubscribe while the listeners are being invoked, this
@@ -103,9 +109,12 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * However, the next `dispatch()` call, whether nested or not, will use a more
    * recent snapshot of the subscription list.
    * 
-   * 在你调用dispatch之前，所有的订阅都被保留了一份快照。如果你在监听器回调中又做出了添加或移除监听器的操作，这些移除的或添加的监听器并不会响应当前的dispatch操作。
-   * （因为当前的dispatch操作使用的是快照版本的监听器列表，所以你移除的那部分监听器还是会被调用到，你新加入的监听器则不会被调用。）而由于dispatch时会先更新订阅器列表快照，
-   *  所以你的添加和移除操作会对下次的dispatch生效，不论该次dispatch是不是嵌套的（简单说就是不管在什么地方调用的dispatch）。
+   * 在你调用dispatch之前，所有的订阅都被保留了一份快照。如果你在监听器回调中又做出了
+   * 添加或移除监听器的操作，这些移除的或添加的监听器并不会响应当前的dispatch操作。
+   * （因为当前的dispatch操作使用的是快照版本的监听器列表，所以你移除的那部分监听器
+   * 还是会被调用到，你新加入的监听器则不会被调用。）而由于dispatch时会先更新订阅器列表快照，
+   *  所以你的添加和移除操作会对下次的dispatch生效，不论该次dispatch是不是嵌套的
+   * （简单说就是不管在什么地方调用的dispatch）。
    * 
    * 2. The listener should not expect to see all state changes, as the state
    * might have been updated multiple times during a nested `dispatch()` before
@@ -113,11 +122,12 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * registered before the `dispatch()` started will be called with the latest
    * state by the time it exits.
    * 
-   * 正因为在嵌套的dispatch调用过程中，state可能已经被更新了多次，而这时监听器回调函数还没有被调用到
-   * （因为每次dispatch都会去通知一遍当前的监听器列表，如果在监听器里又一次发起dispatch，导致状态发生改变，
-   * 发起新的一轮通知，而上一轮中可能还存在一些监听器没有通知到，等通知到了，此时状态已经是最新的了，
-   * 而不是最初的dispatch对应的state），所以别在一个监听器里关注所有的状态变化。确保在dispatch之前注册所有的订阅者，这样
-   * 状态更新时会立即调用它们（因为每次dispatch都会更新一次监听器列表）。
+   * 正因为在嵌套的dispatch调用过程中，state可能已经被更新了多次，而这时监听器回调函数还没
+   * 有被调用到（因为每次dispatch都会去通知一遍当前的监听器列表，如果在监听器里又一次发起
+   * dispatch，导致状态发生改变，发起新的一轮通知，而上一轮中可能还存在一些监听器没有通知到，
+   * 等通知到了，此时状态已经是最新的了，而不是最初的dispatch对应的state），所以别在一个监
+   * 听器里关注所有的状态变化。尽管如此，能够确保的是，在dispatch之前注册所有的订阅者在被调
+   * 用时获取到的都是当前最新的state
    * 
    * @param {Function} listener A callback to be invoked on every dispatch.
    * @returns {Function} A function to remove this change listener.
@@ -130,7 +140,9 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
     let isSubscribed = true // 初始化已订阅为true
 
-    ensureCanMutateNextListeners() // 确保可以更改监听器，这里克隆一份原来的所有监听器的快照到 nextListeners 即新的列表。也就是说，每次添加监听器都会保证产生一份新的监听器列表
+    // 确保可以更改监听器，这里克隆一份原来的所有监听器的快照到
+    //  nextListeners 即新的列表。也就是说，每次添加监听器都会保证产生一份新的监听器列表
+    ensureCanMutateNextListeners() 
     nextListeners.push(listener) // 在新列表里加入当前监听器
 
     return function unsubscribe() { // 返回一个取消订阅的函数
@@ -160,7 +172,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * example, see the documentation for the `redux-thunk` package. Even the
    * middleware will eventually dispatch plain object actions using this method.
    * 
-   * 最基础的实现仅支持纯object类型的action，如果你想disptch如promise,observable,thunk等其他类型action，
+   * 最基础的实现仅支持纯object类型的action，
+   * 如果你想disptch如promise,observable,thunk等其他类型action，
    * 则需要用相应的中间件将创建函数包裹起来。
    * 中间件使用该dispatch方法最终的派发的也是纯的object的action。
    * 
@@ -172,12 +185,15 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * 
    * 要保证action是可序列化的纯object。type必须有，最好用字符串类型常量。
    *
-   * @returns {Object} For convenience, the same action object you dispatched. 返回的是同个action
+   * @returns {Object} For convenience, the same action object you dispatched. 
+   * 返回的是同个action
    *
    * Note that, if you use a custom middleware, it may wrap `dispatch()` to
    * return something else (for example, a Promise you can await).
    * 
    * 注意，如果你用自定义的中间件，包装了dispatch，则可能返回其他类型。
+   * 比如异步操作时可以返回Promise，那么可以这样： await store.dispatch(action)
+   * 这取决于中间件。
    */
   function dispatch(action) {
     if (!isPlainObject(action)) { // 不是纯对象就抛出错误
@@ -200,14 +216,17 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
     try {
       isDispatching = true
-      currentState = currentReducer(currentState, action) // 调用reducer。从这里可以看出，如果提供了preloadedState，初始化时，preloadedState会覆盖reducer里面提供的默认值。
+      // 调用reducer。从这里可以看出，如果提供了preloadedState，初始化时，
+      //  preloadedState会覆盖reducer里面提供的默认值。
+      currentState = currentReducer(currentState, action) 
     } finally {
       isDispatching = false
     }
-
-    const listeners = currentListeners = nextListeners // 在通知监听器前，先更新监听器列表，监听器列表可能会在监听器函数里发生改变。这一步可以保证每次dispatch中都通知当前最新的监听器列表，
-                                                      // 也就是说，每次dispatch都有与其相对应的一份监听器列表快照，而对比任意两次dispatch，它们所使用的监听器列表则可能是不同的，
-                                                      // 产生这一情况的原因是监听器回调函数中修改了监听器列表且又嵌套了dispatch（每次修改监听器列表都会产生一份新的监听器列表），前面已经有说明。
+      // 在通知监听器前，先更新监听器列表，监听器列表可能会在监听器函数里发生改变。
+      //  这一步可以保证每次dispatch中都通知当前最新的监听器列表，
+      // 也就是说，每次dispatch都有与其相对应的一份监听器列表快照，
+      //  而对比任意两次dispatch，它们所使用的监听器列表则可能是不同的，
+    const listeners = currentListeners = nextListeners 
     for (let i = 0; i < listeners.length; i++) {
       const listener = listeners[i]
       listener()

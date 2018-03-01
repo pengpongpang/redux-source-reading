@@ -2,7 +2,10 @@ import { ActionTypes } from './createStore'
 import isPlainObject from 'lodash/isPlainObject'
 import warning from './utils/warning'
 
-function getUndefinedStateErrorMessage(key, action) { // 用于抛异常，异常里包含了 返回了undefined的分支reducer 的信息。如果reducer不响应一个action，应该返回传入的state，而不是undefined，如果需要清空state，用null。
+
+// 用于抛异常，异常里包含了 返回了undefined的分支reducer 的信息。
+// 如果reducer不响应一个action，应该返回传入的state，而不是undefined，如果需要清空state，用null。
+function getUndefinedStateErrorMessage(key, action) { 
   const actionType = action && action.type
   const actionName = (actionType && `"${actionType.toString()}"`) || 'an action'
 
@@ -13,11 +16,13 @@ function getUndefinedStateErrorMessage(key, action) { // 用于抛异常，异�
   )
 }
 
-function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, unexpectedKeyCache) { // 该函数对state形状存在的异常情况做统一处理，返回警告信息。
+// 该函数对state形状存在的异常情况做统一处理，返回警告信息。
+function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, unexpectedKeyCache) { 
   const reducerKeys = Object.keys(reducers)
   const argumentName = action && action.type === ActionTypes.INIT ? // 判断是否在进行state的初始化
-    'preloadedState argument passed to createStore' : // 初始化时传入的state是preloadState。参考 createStore.js 第58行、第170行
-    'previous state received by the reducer' // 如果action不是 ActionTypes.INIT，说明已经存在了 旧state （ ActionTypes.INIT始终是第一个被派发的动作，参考createStore.js 第245行 ）
+    'preloadedState argument passed to createStore' : // 初始化时传入的state是preloadState。参考 createStore.js源码 第58行、第170行
+    'previous state received by the reducer' // 如果action不是 ActionTypes.INIT，说明已经存在了 旧state （ ActionTypes.INIT始终是第一个被派发的动作，
+                                              // 参考createStore.js源码 第245行 ）
 
   if (reducerKeys.length === 0) { // 没有解析出有效的reducer，说明传入参数reducers不符要求。
     return (
@@ -26,7 +31,8 @@ function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, une
     )
   }
 
-  if (!isPlainObject(inputState)) { // 使用combineReducers时，state一定是object类型，如果不是，则可能是preloadedState类型错误，或reducer计算出的state有误。
+ // 使用combineReducers时，state一定是object类型，如果不是，则可能是preloadedState类型错误，或reducer计算出的state有误。
+  if (!isPlainObject(inputState)) { 
     return (
       `The ${argumentName} has unexpected type of "` +
       ({}).toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] +
@@ -34,9 +40,9 @@ function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, une
       `keys: "${reducerKeys.join('", "')}"`
     )
   }
-
-  const unexpectedKeys = Object.keys(inputState).filter(key => // 过滤出state中不应该存在的多余的key，要保证state的key的正确性，当然多余的key不会引起什么严重问题，
-                                                            // 只是这些key没有相应的reducer进行计算。
+  // 过滤出state中不应该存在的多余的key，要保证state的key的正确性，当然多余的key不会引起什么严重问题，
+  // 只是这些key没有相应的reducer进行计算。
+  const unexpectedKeys = Object.keys(inputState).filter(key => 
     !reducers.hasOwnProperty(key) &&
     !unexpectedKeyCache[key]
   )
@@ -59,8 +65,9 @@ function assertReducerShape(reducers) { // 试探分支reducer内条件的默认
   Object.keys(reducers).forEach(key => {
     const reducer = reducers[key]
     const initialState = reducer(undefined, { type: ActionTypes.INIT }) // 获取到分支的初始state
-
-    if (typeof initialState === 'undefined') { // 如果分支state为undefined则抛出错误，不允许初始state为undefined。reducer如果返回null则会跳过此提示，所以初始化允许null。
+  
+    // 如果分支state为undefined则抛出错误，不允许初始state为undefined。reducer如果返回null则会跳过此提示，所以初始化允许null。
+    if (typeof initialState === 'undefined') { 
       throw new Error(
         `Reducer "${key}" returned undefined during initialization. ` +
         `If the state passed to the reducer is undefined, you must ` +
@@ -71,8 +78,9 @@ function assertReducerShape(reducers) { // 试探分支reducer内条件的默认
     }
 
     const type = '@@redux/PROBE_UNKNOWN_ACTION_' + Math.random().toString(36).substring(7).split('').join('.')
-    if (typeof reducer(undefined, { type }) === 'undefined') { // 上面如果没有抛出错误，还存在一种例外情况，就是人为地在reducer内加入了ActionTypes.INIT，
-                                                              // 且返回值不为undefined。为了防止这种行为，这里使用随机type值进行探测。
+    if (typeof reducer(undefined, { type }) === 'undefined') { 
+      // 上面如果没有抛出错误，还存在一种例外情况，就是人为地在reducer内加入了ActionTypes.INIT，
+      // 且返回值不为undefined。为了防止这种行为，这里使用随机type值进行探测。
       throw new Error(
         `Reducer "${key}" returned undefined when probed with a random type. ` +
         `Don't try to handle ${ActionTypes.INIT} or other actions in "redux/*" ` +

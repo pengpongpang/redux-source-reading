@@ -26,11 +26,20 @@ export default function applyMiddleware(...middlewares) {
       getState: store.getState,
       dispatch: (action) => dispatch(action)
     }
-    chain = middlewares.map(middleware => middleware(middlewareAPI)) // 中间件是高阶函数，即返回值是函数，这里是利用闭包，先把api传进去。返回的函数长什么样？答：chain列表里的每个函数都接收一个dispatch（最右边的中间件接收到的是原始dispatch，其余中间件接收到的是经过它右侧的中间件层叠包装后的dispatch）为参数，然后返回一个包装过的dispatch。
-                                                                    
-    dispatch = compose(...chain)(store.dispatch)  // 加强dispatch，从这里可以看出，所谓中间件，其实是在函数内部包装原始dispatch，然后返回一个函数，看成是新的dispatch，而新的dispatch长什么样就完全取决于中间件了。
-                                                  // 最终整个中间件链返回一个包装后的dispatch，在派发action时，最外层dispatch先接收到，然后在内部又调用内层dispatch，传入新的action，上述过程会一直进行到最内层dispatch利用原始dispatch派发出原始action。
-    return {
+
+// 中间件是高阶函数，即返回值是函数，这里是利用闭包，先把api传进去。返回的函数长什么样？
+// 答：chain列表里的每个函数都接收一个dispatch（最右边的中间件接收到的是原始dispatch，
+// 其余中间件接收到的是经过它右侧的中间件层叠包装后的dispatch）为参数，然后返回一个包装过的dispatch。
+    
+    chain = middlewares.map(middleware => middleware(middlewareAPI)) 
+
+// 加强dispatch，从这里可以看出，所谓中间件，其实是在函数内部包装原始dispatch，然后返回一个函数，
+// 看成是新的dispatch，而新的dispatch长什么样就完全取决于中间件了。
+// 最终整个中间件链返回一个包装后的dispatch，在派发action时，最外层dispatch先接收到，
+// 然后在内部又调用内层dispatch，传入新的action，上述过程会一直进行到最内层dispatch利用原始dispatch派发出原始action。
+                                                         
+    dispatch = compose(...chain)(store.dispatch)  
+      return {
       ...store,
       dispatch
     }

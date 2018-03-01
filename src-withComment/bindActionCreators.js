@@ -38,8 +38,9 @@ export default function bindActionCreators(actionCreators, dispatch) {
   if (typeof actionCreators === 'function') { // 如果传入了一个actionsCreator，则直接将它包裹起来
     return bindActionCreator(actionCreators, dispatch)
   }
-
-  if (typeof actionCreators !== 'object' || actionCreators === null) { // 注意这里 null 的type是object，所以要排除
+  
+  // 注意这里 null 的type是object，所以要排除
+  if (typeof actionCreators !== 'object' || actionCreators === null) { 
     throw new Error(
       `bindActionCreators expected an object or a function, instead received ${actionCreators === null ? 'null' : typeof actionCreators}. ` +
       `Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?`
@@ -48,7 +49,8 @@ export default function bindActionCreators(actionCreators, dispatch) {
 
   const keys = Object.keys(actionCreators)
   const boundActionCreators = {}
-  for (let i = 0; i < keys.length; i++) { // 对每个key上的actionCrator进行包装后保存到boundActionCreators相应的key上
+  // 对每个key上的actionCrator进行包装后保存到boundActionCreators相应的key上
+  for (let i = 0; i < keys.length; i++) { 
     const key = keys[i] // 当前key
     const actionCreator = actionCreators[key] // 当前actionCreator
     if (typeof actionCreator === 'function') { // 必须是function，否则忽略
